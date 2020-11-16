@@ -1,0 +1,5 @@
+/target
+.env
+*.flac
+*.mp3
+*.db

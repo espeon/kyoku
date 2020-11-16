@@ -1,0 +1,49 @@
+[package]
+name = "kyoku"
+version = "0.0.1"
+authors = ["emma"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+# .env filer
+dotenv = "0.15.0"
+
+# scanning folders/files stuff
+jwalk = "0.5"
+crossbeam-channel = "0.4.0"
+notify = "5.0.0-pre.3"
+
+# time stuff
+chrono = "0.4"
+
+# parsing metadata stuff
+metaflac = "0.2"
+
+# lazy error handling
+anyhow = "1.0"
+
+# database things
+sqlx = { version = "0.4.0-beta.1", default-features = false, features = [ "runtime-tokio-native-tls", "macros", "postgres", "sqlite", "chrono", "json" ] }
+
+# json/serialisation things
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# system info (does not work currently)
+heim = { git = "https://github.com/heim-rs/heim", features = ["memory", "process"] }
+
+# preferred async library
+[dependencies.tokio]
+version = "0.2"
+features = ["full"]
+
+# web server stuff
+[dependencies.rocket]
+git = "https://github.com/SergioBenitez/Rocket"
+
+[dependencies.rocket_contrib]
+git = "https://github.com/SergioBenitez/Rocket"
+default-features = false
+features = ["json"]
