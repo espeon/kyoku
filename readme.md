@@ -3,6 +3,7 @@ rusty music server
 
 meant to be used with [waveline player](https://player.waveline.app) but currently not compatible.
 
+note: this is absolutely not done by any means. anything can and will change.
 ### API
 #### System
 |Done|Path|Description|Queries/Notes
