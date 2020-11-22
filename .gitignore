@@ -1,5 +1,8 @@
 /target
+/art
 .env
 *.flac
 *.mp3
 *.db
+*.db-shm
+*.db-wal

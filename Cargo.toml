@@ -7,6 +7,9 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+# request web client thing
+reqwest = { version="0.10.9", features = ["blocking", "json"] }
+
 # .env filer
 dotenv = "0.15.0"
 
@@ -27,12 +30,16 @@ anyhow = "1.0"
 # database things
 sqlx = { version = "0.4.0-beta.1", default-features = false, features = [ "runtime-tokio-native-tls", "macros", "postgres", "sqlite", "chrono", "json" ] }
 
-# json/serialisation things
+# json/serialisation/parsing things
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+regex = "1"
+base64 = "0.13.0"
+md-5 = "0.7.0"
 
-# system info (does not work currently)
-heim = { git = "https://github.com/heim-rs/heim", features = ["memory", "process"] }
+# system info
+heim = { git = "https://github.com/heim-rs/heim", features = ["memory", "host", "process"] }
+num_cpus = "1.0"
 
 # preferred async library
 [dependencies.tokio]

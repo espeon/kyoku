@@ -1,51 +1,38 @@
-mod index;
-mod db;
 mod api;
+mod db;
+mod index;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    dotenv::dotenv().unwrap();
-    let path = "test";
-    
+    dotenv::dotenv()?;
+    let path = std::env::var("MOUNT")?;
+
     let pool = db::get_pool().await?;
+    let p_cloned = pool.clone();
 
     // start indexing/scanning in new thread
-    std::thread::spawn(move || {
-        index::start(path.clone(), path);
+    tokio::spawn(async move {
+        index::start(path.clone(), &path, p_cloned).await;
     });
 
     // start up our web server
     // dunno if i want this in a separate thread or not
     rocket(pool).await?;
-Ok(())
+    Ok(())
 }
 
-
-use rocket::State;
-use std::sync::atomic;
-
-struct HitCount {
-    count: atomic::AtomicUsize
-}
-
-async fn rocket(_pool: sqlx::Pool<sqlx::Sqlite>) -> anyhow::Result<()> {
+async fn rocket(pool: sqlx::Pool<sqlx::Sqlite>) -> anyhow::Result<()> {
     rocket::ignite()
-    .manage( HitCount { count: atomic::AtomicUsize::new(0) })
-    .mount("/", rocket::routes![hello])
-    .mount("/", rocket::routes![count])
-    .mount("/system", rocket::routes![api::system::info])
-    .launch()
-    .await?;
+        .manage(pool)
+        .mount("/", rocket::routes![hello])
+        .mount("/system", rocket::routes![api::system::info])
+        .mount("/search", rocket::routes![api::search::main])
+        .launch()
+        .await?;
     Ok(())
 }
 
 #[rocket::get("/")]
 async fn hello() -> &'static str {
     "hello world!"
-}
-
-#[rocket::get("/count")]
-fn count(hit_count: State<HitCount>) -> String {
-    let current_count = hit_count.count.load(atomic::Ordering::Relaxed);
-    format!("Number of visits: {}", current_count)
 }

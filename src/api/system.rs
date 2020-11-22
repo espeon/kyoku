@@ -2,6 +2,8 @@ use std::env;
 use rocket_contrib::json::Json;
 use serde::Serialize;
 
+use heim::{memory, host, units};
+
 #[derive(Serialize)]
 pub struct SystemInfo {
     version: String,
@@ -23,14 +25,14 @@ pub struct SystemInfo {
 }
 
 #[rocket::get("/info")]
-pub fn info() -> Json<SystemInfo>{
+pub async fn info() -> Json<SystemInfo>{
     Json(SystemInfo{
         version: "0.0.1".to_string(),
-        arch: "x86/64".to_string(),
+        arch: host::platform().await.unwrap().architecture().as_str().to_string(),
         node_version: "N/A".to_string(),
-        num_cpus: 64,
-        uptime: 100.001,
-        free_mem: 12000,
+        num_cpus: num_cpus::get() as i64,
+        uptime: host::uptime().await.unwrap().get::<units::time::millisecond>() as f64,
+        free_mem: memory::memory().await.unwrap().free().get::<units::information::byte>() as i64,
         id: 1,
         start: "N/A".to_string(),
         end: "N/A".to_string(),

@@ -1,9 +1,30 @@
-// most of this probably likely stolen from https://github.com/agersant/polaris/blob/master/src/index/metadata.rs
+// most of this likely stolen from https://github.com/agersant/polaris/blob/master/src/index/metadata.rs
 
 #[derive(Debug, PartialEq)]
 pub enum AudioFormat {
     FLAC,
 }
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct AudioMetadata {
+    pub name: String,
+    pub number: u32,
+    pub duration: u32,
+    pub album: String,
+    pub album_artist: String,
+    pub artists: Vec<String>,
+    pub picture: Option<Picture>,
+    pub path: std::path::PathBuf,
+    pub year: Option<i32>,
+    pub lossless: bool,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct Picture {
+    pub bytes: Vec<u8>,
+}
+
+use sqlx::Sqlite;
 
 pub fn get_filetype(path: &std::path::PathBuf) -> Option<AudioFormat> {
     // get extension
@@ -23,21 +44,21 @@ pub fn get_filetype(path: &std::path::PathBuf) -> Option<AudioFormat> {
     }
 }
 
-pub fn scan_file(path: &std::path::PathBuf) {
+pub async fn scan_file(path: &std::path::PathBuf, pool: sqlx::Pool<Sqlite>) {
     let data = match get_filetype(path) {
-        Some(AudioFormat::FLAC) => Some(scan_flac(path)),
-        None => None,
+        Some(AudioFormat::FLAC) => Some(scan_flac(path, pool).await),
+        None => return,
     };
     match data {
         r => println!("{}", r.unwrap()),
         //Some(Err(e)) => {
         //	println!("Error while scanning file metadata at path '{:?}': {}", path, e);
         //},
-        //None => None
+        //None => println!("none"),
     };
 }
 
-pub fn scan_flac(path: &std::path::PathBuf) -> String {
+pub async fn scan_flac(path: &std::path::PathBuf, pool: sqlx::Pool<Sqlite>) -> String {
     // read da tag
     let tag = metaflac::Tag::read_from_path(path).unwrap();
     let vorbis = tag.vorbis_comments().ok_or(0).unwrap();
@@ -50,7 +71,37 @@ pub fn scan_flac(path: &std::path::PathBuf) -> String {
         _ => None,
     }
     .unwrap();
-    // format accordingly
+    let year = vorbis.get("DATE").and_then(|d| d[0].parse::<i32>().ok());
+
+    let picture = tag
+        .pictures()
+        .filter(|&pic| matches!(pic.picture_type, metaflac::block::PictureType::CoverFront))
+        .next()
+        .and_then(|pic| {
+            Some(Picture {
+                bytes: pic.data.to_owned(),
+            })
+        });
+
+    let metadata = AudioMetadata {
+        name: vorbis.title().map(|v| v[0].clone()).unwrap(),
+        number: vorbis.track().unwrap(),
+        duration: duration,
+        album: vorbis.album().map(|v| v[0].clone()).unwrap(),
+        album_artist: match vorbis.album_artist().map(|v| v[0].clone()) {
+            Some(e) => e,
+            None => vorbis.artist().map(|v| v[0].clone()).unwrap(),
+        },
+        artists: vorbis.artist().unwrap().to_owned(),
+        picture: picture,
+        path: path.to_owned(),
+        year: year,
+        lossless: true,
+    };
+
+    crate::index::db::add_song(metadata, pool).await;
+
+    // make it pretty~!
     let secs = chrono::Duration::seconds(duration as i64);
     // like this: min:sec
     let mut formatted_duration = format!(
@@ -68,6 +119,7 @@ pub fn scan_flac(path: &std::path::PathBuf) -> String {
         )
     }
     // TODO remove this and replace with a struct containing this and more stuff
+    // or keep this and commit to db somewhere else?
     format!(
         "{}. {} by {} ({})",
         match vorbis.track() {

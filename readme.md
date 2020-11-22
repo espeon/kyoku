@@ -13,9 +13,10 @@ note: this is absolutely not done by any means. anything can and will change.
 #### Tracks
 |Done|Path|Description|Queries/Notes
 |-|-|-|-|
+[ ]|`GET /tracks`|Get information about a track|`?album=:int` - find songs where album id is the number|
+||||`?skip=:int&limit:int` - used for paging
 [ ]|`GET /tracks/:id`|Get information about a track|N/A|
 [ ]|`GET /tracks/:id/stream`|Stream a track|`?transcode=:bool` - transcode the song or not|
-||||`?rename=:bool` - rename the song upon downloading|
 [ ]|`GET /tracks/:id/like`|Get whether you liked the track|`?liked=:bool` - toggle song likage|
 
 #### Albums
@@ -39,3 +40,6 @@ note: this is absolutely not done by any means. anything can and will change.
 |-|-|-|-|
 [ ]|`GET /search`|Get information about a track|`?q=:string` - search for your query!|
 ||||Note: returns all categories
+
+### Licence
+This software is released under the MIT licence.
