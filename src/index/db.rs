@@ -11,7 +11,7 @@ pub async fn add_song(metadata: AudioMetadata, pool: sqlx::Pool<Sqlite>) {
         .unwrap();
     // check for genre data, and if so, find/create.
     // finally, add our track
-    let song = song_foc(metadata, artist, album, pool).await.unwrap();
+    let _song = song_foc(metadata, artist, album, pool).await.unwrap();
 }
 
 async fn artist_foc(metadata: AudioMetadata, pool: sqlx::Pool<Sqlite>) -> anyhow::Result<Vec<i32>> {

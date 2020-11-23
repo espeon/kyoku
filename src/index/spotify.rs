@@ -1,4 +1,4 @@
-use base64::{decode, encode};
+use base64::encode;
 use serde::{Deserialize, Serialize};
 use std::env;
 
@@ -15,8 +15,12 @@ pub async fn get_artist_image(query: &str) -> anyhow::Result<String> {
         .await?
         .json()
         .await?;
-        let img = if res.artists.items.len() <= 0 {
-            res.artists.items[0].images[0].clone().url
+        let img = if res.artists.items.len() > 0 {
+            if res.artists.items[0].images.len() > 0 {
+                res.artists.items[0].images[0].clone().url
+            } else {
+                "https://http.cat/404.jpg".to_string()
+            }
         } else {
             // TODO look somewhere else for this
             "https://http.cat/450.jpg".to_string()
