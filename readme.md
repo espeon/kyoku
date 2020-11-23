@@ -1,4 +1,4 @@
-## <img src="./kyoku.png" width="450px">
+## <img src="https://cdn.statically.io/img/raw.githubusercontent.com/w=700/kanbaru/kyoku/main/kyoku.png" width="450px">
 rusty music server
 
 meant to be used with [waveline player](https://player.waveline.app) but currently not compatible.
