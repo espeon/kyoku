@@ -16,6 +16,8 @@ pub async fn get_artist_info(artist: &str) -> anyhow::Result<FmArtist> {
     })
 }
 
+
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct FmSearchResult {
     artist: SearchResultArtist,

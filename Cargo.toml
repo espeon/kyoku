@@ -1,25 +1,25 @@
 [package]
 name = "kyoku"
 version = "0.0.1"
-authors = ["emma"]
+authors = ["Natalie Bridgers"]
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 # request web client thing
-reqwest = { version="0.10.9", features = ["blocking", "json"] }
+reqwest = { version="0.11.9", features = ["blocking", "json"] }
 
 # .env filer
 dotenv = "0.15.0"
 
 # scanning folders/files stuff
-jwalk = "0.5"
+jwalk = "0.6"
 crossbeam-channel = "0.4.0"
-notify = "5.0.0-pre.3"
+notify = "5.0.0-pre.13"
 
 # time stuff
-chrono = "0.4"
+time = { version = "0.3", features = ["formatting"] }
 
 # parsing metadata stuff
 metaflac = "0.2"
@@ -28,7 +28,7 @@ metaflac = "0.2"
 anyhow = "1.0"
 
 # database things
-sqlx = { version = "0.4.0-beta.1", default-features = false, features = [ "runtime-tokio-native-tls", "macros", "postgres", "sqlite", "chrono", "json" ] }
+sqlx = { version = "0.5.10", default-features = false, features = [ "runtime-tokio-native-tls", "macros", "postgres", "sqlite", "time", "json" ] }
 
 # json/serialisation/parsing things
 serde = { version = "1.0", features = ["derive"] }
@@ -41,16 +41,16 @@ md-5 = "0.7.0"
 heim = { git = "https://github.com/heim-rs/heim", features = ["memory", "host", "process"] }
 num_cpus = "1.0"
 
+axum = { version = "0.4.5", features = ["tower-log"] }
+futures = "0.3.21"
+tower-http = { version = "0.2.2", features = ["fs"] }
+tower = "0.4.11"
+
 # preferred async library
 [dependencies.tokio]
-version = "0.2"
+version = "1.16"
 features = ["full"]
 
-# web server stuff
-[dependencies.rocket]
-git = "https://github.com/SergioBenitez/Rocket"
+[patch.crates-io]
+darwin-libproc = {git = "https://github.com/Orycterope/darwin-libproc", branch = "dependencies_versions"}
 
-[dependencies.rocket_contrib]
-git = "https://github.com/SergioBenitez/Rocket"
-default-features = false
-features = ["json"]

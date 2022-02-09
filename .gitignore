@@ -1,5 +1,6 @@
 /target
 /art
+/music
 .env
 *.flac
 *.mp3

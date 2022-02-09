@@ -3,8 +3,13 @@ mod db;
 mod fm;
 mod spotify;
 
+use futures::{
+    channel::mpsc::{channel, Receiver},
+    SinkExt, StreamExt,
+};
+
 use sqlx::Sqlite;
-use notify::{RecommendedWatcher, RecursiveMode, Watcher};
+use notify::{Event, RecommendedWatcher, RecursiveMode, Watcher};
 use notify::event::EventKind;
 use std::{path::Path, thread, time};
 use jwalk::{WalkDir};
@@ -33,18 +38,28 @@ pub async fn scan<P: AsRef<Path>>(path: P, pool:sqlx::Pool<Sqlite>) {
       }
 }
 
-pub async fn watch<P: AsRef<Path>>(path: P, pool:sqlx::Pool<Sqlite>) -> notify::Result<()> {
-    let (tx, rx) = std::sync::mpsc::channel();
+fn async_watcher() -> notify::Result<(RecommendedWatcher, Receiver<notify::Result<Event>>)> {
+    let (mut tx, rx) = channel(1);
 
     // Automatically select the best implementation for your platform.
     // You can also access each implementation directly e.g. INotifyWatcher.
-    let mut watcher: RecommendedWatcher = Watcher::new_immediate(move |res| tx.send(res).unwrap())?;
+    let watcher = RecommendedWatcher::new(move |res| {
+        futures::executor::block_on(async {
+            tx.send(res).await.unwrap();
+        })
+    })?;
+
+    Ok((watcher, rx))
+}
+
+pub async fn watch<P: AsRef<Path>>(path: P, pool:sqlx::Pool<Sqlite>) -> notify::Result<()> {
+    let (mut watcher, mut rx) = async_watcher()?;
 
     // Add a path to be watched. All files and directories at that path and
     // below will be monitored for changes.
-    watcher.watch(path, RecursiveMode::Recursive)?;
+    watcher.watch(path.as_ref(), RecursiveMode::Recursive)?;
 
-    for res in rx {
+    while let Some(res) = rx.next().await {
         match res {
             Ok(event) => parse_event(event, pool.clone()).await,
             Err(e) => println!("watch error: {:?}", e),

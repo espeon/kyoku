@@ -4,6 +4,7 @@ use std::env;
 
 pub async fn get_artist_image(query: &str) -> anyhow::Result<String> {
     let client = reqwest::Client::new();
+    // TODO: store key so we dont need to do extra request on every single image request
     let key = authorize_spotify().await?;
     let res: SpotifyArtistResponse = client
         .get(&format!(

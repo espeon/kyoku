@@ -1,3 +1,7 @@
+use axum::{response::Html, routing::get, AddExtensionLayer, Router};
+use sqlx::{Pool, Sqlite};
+use std::net::SocketAddr;
+
 mod api;
 mod db;
 mod index;
@@ -5,7 +9,7 @@ mod index;
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     dotenv::dotenv()?;
-    let path = std::env::var("MOUNT")?;
+    let path = std::env!("MOUNT");
 
     let pool = db::get_pool().await?;
     let p_cloned = pool.clone();
@@ -17,22 +21,29 @@ async fn main() -> anyhow::Result<()> {
 
     // start up our web server
     // dunno if i want this in a separate thread or not
-    rocket(pool).await?;
+
+    serve(pool).await?;
+
     Ok(())
 }
 
-async fn rocket(pool: sqlx::Pool<sqlx::Sqlite>) -> anyhow::Result<()> {
-    rocket::ignite()
-        .manage(pool)
-        .mount("/", rocket::routes![hello])
-        .mount("/system", rocket::routes![api::system::info])
-        .mount("/search", rocket::routes![api::search::main])
-        .launch()
+async fn serve(p: Pool<Sqlite>) -> anyhow::Result<()> {
+    // build our application with a route
+    let app = Router::new()
+        .route("/", get(handler))
+        .route("/serve/a-:id", get(api::serve::serve_audio))
+        .layer(AddExtensionLayer::new(p));
+
+    // run it
+    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+    println!("listening on {}", addr);
+    axum::Server::bind(&addr)
+        .serve(app.into_make_service())
         .await?;
+
     Ok(())
 }
 
-#[rocket::get("/")]
-async fn hello() -> &'static str {
-    "hello world!"
+async fn handler() -> Html<&'static str> {
+    Html("<h1>Hello, World!</h1>")
 }

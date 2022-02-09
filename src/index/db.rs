@@ -1,6 +1,7 @@
 use crate::index::metadata::AudioMetadata;
 use md5::{Digest, Md5};
 use sqlx::Sqlite;
+use time::format_description::well_known::Rfc3339;
 
 pub async fn add_song(metadata: AudioMetadata, pool: sqlx::Pool<Sqlite>) {
     // find or create new artist/s
@@ -15,9 +16,9 @@ pub async fn add_song(metadata: AudioMetadata, pool: sqlx::Pool<Sqlite>) {
 }
 
 async fn artist_foc(metadata: AudioMetadata, pool: sqlx::Pool<Sqlite>) -> anyhow::Result<Vec<i32>> {
+    // temporary artist storage (to return)
     let mut artivec: Vec<i32> = vec![];
     for arti in metadata.artists {
-        dbg!(&arti);
         let _artist = match sqlx::query!(
             r#"
         select id
@@ -31,13 +32,16 @@ async fn artist_foc(metadata: AudioMetadata, pool: sqlx::Pool<Sqlite>) -> anyhow
         {
             Ok(e) => {
                 if e.len() > 0 {
-                    artivec.push(e[0].id.unwrap() as i32)
+                    artivec.push(e[0].id as i32)
                 } else {
+                    // format and coerce
+
                     let fm_info = crate::index::fm::get_artist_info(&metadata.album_artist).await?;
                     let artist_image = crate::index::spotify::get_artist_image(&arti).await?;
-                    let now = chrono::offset::Utc::now().to_rfc3339();
+                    let now = time::OffsetDateTime::now_utc().format(&Rfc3339)?;
                     let similar = fm_info.similar.join(",");
                     let tags = fm_info.tags.join(",");
+                    // insert into db
                     match sqlx::query!(
                         r#"
                 INSERT INTO `artist` (name, bio, picture, created_at, similar, tags)
@@ -57,7 +61,7 @@ async fn artist_foc(metadata: AudioMetadata, pool: sqlx::Pool<Sqlite>) -> anyhow
                     .fetch_all(&mut pool.acquire().await?)
                     .await
                     {
-                        Ok(e) => artivec.push(e[0].id.unwrap() as i32),
+                        Ok(e) => artivec.push(e[0].id as i32),
                         Err(e) => return Err(anyhow::format_err!(e)),
                     };
                 }
@@ -73,6 +77,7 @@ async fn album_foc(
     artist: Vec<i32>,
     pool: sqlx::Pool<Sqlite>,
 ) -> anyhow::Result<i32> {
+    // check if album already exists
     let _ = match sqlx::query!(
         r#"
         select id
@@ -85,9 +90,12 @@ async fn album_foc(
     .await
     {
         Ok(e) => {
+            // if no results, return
             if e.len() > 0 {
-                return Ok(e[0].id.unwrap() as i32);
+                return Ok(e[0].id as i32);
             } else {
+                // else we insert the allbum
+                // save image as <md5> OR a 404 image
                 let image_url = match metadata.picture {
                     Some(e) => match save_image_md5(e.bytes).await {
                         Ok(e) => e,
@@ -95,7 +103,9 @@ async fn album_foc(
                     },
                     None => "https://http.cat/404".to_string(),
                 };
-                let now = chrono::offset::Utc::now().to_rfc3339();
+                let now = time::OffsetDateTime::now_utc().format(&Rfc3339)?;
+
+                // insert into database
                 let _ = match sqlx::query!(
                     r#"
             INSERT INTO `album` (name, artist, picture, year, created_at)
@@ -114,7 +124,7 @@ async fn album_foc(
                 .fetch_all(&mut pool.acquire().await?)
                 .await
                 {
-                    Ok(e) => return Ok(e[0].id.unwrap() as i32),
+                    Ok(e) => return Ok(e[0].id as i32),
                     Err(e) => {
                         return Err(anyhow::format_err!(e));
                     }
@@ -133,6 +143,7 @@ async fn song_foc(
     album: i32,
     pool: sqlx::Pool<Sqlite>,
 ) -> anyhow::Result<i32> {
+    // check if song exists
     let _ = match sqlx::query!(
         r#"
         select id
@@ -146,10 +157,15 @@ async fn song_foc(
     {
         Ok(e) => {
             if e.len() > 0 {
-                return Ok(e[0].id.unwrap() as i32);
+                return Ok(e[0].id as i32);
             } else {
-                let now = chrono::offset::Utc::now().to_rfc3339();
-                let v = artist.into_iter().map(|n| n.to_string()).collect::<Vec<String>>().join(",");
+                // put in database
+                let now = time::OffsetDateTime::now_utc().format(&Rfc3339)?;
+                let v = artist
+                    .into_iter()
+                    .map(|n| n.to_string())
+                    .collect::<Vec<String>>()
+                    .join(",");
                 let p = metadata.path.to_str().unwrap();
                 let n = metadata.number as i64;
                 let d = metadata.duration as i64;
@@ -157,7 +173,7 @@ async fn song_foc(
                 let _ = match sqlx::query!(
                     r#"
                     INSERT INTO `song` (number, name, path, album, artist, artists, liked, duration, plays, lossless, genre, created_at)
-                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 10, $11, $12);
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12);
                     select id
                     from `song`
                     where name = $2;
@@ -170,15 +186,16 @@ async fn song_foc(
                     v,
                     false,
                     d,
-                    0,
+                    0 as i32,
                     metadata.lossless,
                     "",
                     now,
+                    metadata.name
                 )
                 .fetch_all(&mut pool.acquire().await?)
                 .await
                 {
-                    Ok(e) => return Ok(e[0].id.unwrap() as i32),
+                    Ok(e) => return Ok(e[0].id as i32),
                     Err(e) => {
                         return Err(anyhow::format_err!(e));
                     }
@@ -198,5 +215,5 @@ async fn save_image_md5(bytes: Vec<u8>) -> anyhow::Result<String> {
     let dest = format! {"./art/{:x}.png",&hash};
     let mut out = tokio::fs::File::create(&dest).await?;
     tokio::io::copy(&mut &*bytes, &mut out).await?;
-    Ok(dest)
+    Ok(format! {"{:x}.png",&hash})
 }

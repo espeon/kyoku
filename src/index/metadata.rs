@@ -102,20 +102,20 @@ pub async fn scan_flac(path: &std::path::PathBuf, pool: sqlx::Pool<Sqlite>) -> S
     crate::index::db::add_song(metadata, pool).await;
 
     // make it pretty~!
-    let secs = chrono::Duration::seconds(duration as i64);
+    let secs = time::Duration::seconds(duration as i64);
     // like this: min:sec
     let mut formatted_duration = format!(
         "{}:{:02}",
-        &secs.num_minutes(),
-        &secs.num_seconds() - (secs.num_minutes() * 60)
+        &secs.whole_minutes(),
+        &secs.whole_seconds() - (secs.whole_minutes() * 60)
     );
     // hours maybe? nah lol
-    if secs.num_hours() > 0 {
+    if secs.whole_hours() > 0 {
         formatted_duration = format!(
             "{}:{:02}:{:02}",
-            secs.num_hours(),
-            &secs.num_minutes(),
-            &secs.num_seconds() - (secs.num_minutes() * 60)
+            secs.whole_hours(),
+            &secs.whole_minutes(),
+            &secs.whole_seconds() - (secs.whole_minutes() * 60)
         )
     }
     // TODO remove this and replace with a struct containing this and more stuff
