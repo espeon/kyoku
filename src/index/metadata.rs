@@ -24,7 +24,7 @@ pub struct Picture {
     pub bytes: Vec<u8>,
 }
 
-use sqlx::Sqlite;
+
 
 pub fn get_filetype(path: &std::path::PathBuf) -> Option<AudioFormat> {
     // get extension
@@ -44,7 +44,7 @@ pub fn get_filetype(path: &std::path::PathBuf) -> Option<AudioFormat> {
     }
 }
 
-pub async fn scan_file(path: &std::path::PathBuf, pool: sqlx::Pool<Sqlite>) {
+pub async fn scan_file(path: &std::path::PathBuf, pool: sqlx::Pool<sqlx::Postgres>) {
     let data = match get_filetype(path) {
         Some(AudioFormat::FLAC) => Some(scan_flac(path, pool).await),
         None => return,
@@ -58,7 +58,7 @@ pub async fn scan_file(path: &std::path::PathBuf, pool: sqlx::Pool<Sqlite>) {
     };
 }
 
-pub async fn scan_flac(path: &std::path::PathBuf, pool: sqlx::Pool<Sqlite>) -> String {
+pub async fn scan_flac(path: &std::path::PathBuf, pool: sqlx::Pool<sqlx::Postgres>) -> String {
     // read da tag
     let tag = metaflac::Tag::read_from_path(path).unwrap();
     let vorbis = tag.vorbis_comments().ok_or(0).unwrap();

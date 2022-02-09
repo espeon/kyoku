@@ -1,9 +1,9 @@
 use crate::index::metadata::AudioMetadata;
 use md5::{Digest, Md5};
-use sqlx::Sqlite;
-use time::format_description::well_known::Rfc3339;
+use sqlx::postgres::{Postgres};
 
-pub async fn add_song(metadata: AudioMetadata, pool: sqlx::Pool<Sqlite>) {
+
+pub async fn add_song(metadata: AudioMetadata, pool: sqlx::Pool<Postgres>) {
     // find or create new artist/s
     let artist = artist_foc(metadata.clone(), pool.clone()).await.unwrap();
     // find/create new album
@@ -15,14 +15,14 @@ pub async fn add_song(metadata: AudioMetadata, pool: sqlx::Pool<Sqlite>) {
     let _song = song_foc(metadata, artist, album, pool).await.unwrap();
 }
 
-async fn artist_foc(metadata: AudioMetadata, pool: sqlx::Pool<Sqlite>) -> anyhow::Result<Vec<i32>> {
+async fn artist_foc(metadata: AudioMetadata, pool: sqlx::Pool<Postgres>) -> anyhow::Result<Vec<i32>> {
     // temporary artist storage (to return)
     let mut artivec: Vec<i32> = vec![];
     for arti in metadata.artists {
         let _artist = match sqlx::query!(
             r#"
         select id
-        from `artist`
+        from artist
         where name = $1;
         "#,
             arti
@@ -38,25 +38,20 @@ async fn artist_foc(metadata: AudioMetadata, pool: sqlx::Pool<Sqlite>) -> anyhow
 
                     let fm_info = crate::index::fm::get_artist_info(&metadata.album_artist).await?;
                     let artist_image = crate::index::spotify::get_artist_image(&arti).await?;
-                    let now = time::OffsetDateTime::now_utc().format(&Rfc3339)?;
-                    let similar = fm_info.similar.join(",");
+                    //let similar = fm_info.similar.join(",");
                     let tags = fm_info.tags.join(",");
                     // insert into db
                     match sqlx::query!(
                         r#"
-                INSERT INTO `artist` (name, bio, picture, created_at, similar, tags)
-                VALUES($1, $2, $3, $4, $5, $6);
-                select id
-                from `artist`
-                where name = $1;
+                INSERT INTO artist (name, bio, picture, created_at, tags)
+                VALUES($1, $2, $3, $4, $5)
+                RETURNING id
                 "#,
                         arti,
                         fm_info.bio,
                         artist_image,
-                        now,
-                        similar,
+                        &time::OffsetDateTime::now_utc(),
                         tags,
-                        arti
                     )
                     .fetch_all(&mut pool.acquire().await?)
                     .await
@@ -75,13 +70,13 @@ async fn artist_foc(metadata: AudioMetadata, pool: sqlx::Pool<Sqlite>) -> anyhow
 async fn album_foc(
     metadata: AudioMetadata,
     artist: Vec<i32>,
-    pool: sqlx::Pool<Sqlite>,
+    pool: sqlx::Pool<Postgres>,
 ) -> anyhow::Result<i32> {
     // check if album already exists
     let _ = match sqlx::query!(
         r#"
         select id
-        from `album`
+        from album
         where name = $1;
         "#,
         metadata.album,
@@ -103,23 +98,19 @@ async fn album_foc(
                     },
                     None => "https://http.cat/404".to_string(),
                 };
-                let now = time::OffsetDateTime::now_utc().format(&Rfc3339)?;
 
                 // insert into database
                 let _ = match sqlx::query!(
                     r#"
-            INSERT INTO `album` (name, artist, picture, year, created_at)
-            VALUES ($1, $2, $3, $4, $5);
-            select id
-            from `album`
-            where name = $6;
+            INSERT INTO album (name, artist, picture, year, created_at)
+            VALUES ($1, $2, $3, $4, $5)
+            RETURNING id;
             "#,
                     metadata.album,
                     artist[0],
                     image_url,
                     metadata.year,
-                    now,
-                    metadata.album
+                    time::OffsetDateTime::now_utc()
                 )
                 .fetch_all(&mut pool.acquire().await?)
                 .await
@@ -139,15 +130,15 @@ async fn album_foc(
 
 async fn song_foc(
     metadata: AudioMetadata,
-    artist: Vec<i32>,
+    _artist: Vec<i32>,
     album: i32,
-    pool: sqlx::Pool<Sqlite>,
+    pool: sqlx::Pool<Postgres>,
 ) -> anyhow::Result<i32> {
     // check if song exists
     let _ = match sqlx::query!(
         r#"
         select id
-        from `song`
+        from song
         where name = $1;
         "#,
         metadata.name,
@@ -160,37 +151,49 @@ async fn song_foc(
                 return Ok(e[0].id as i32);
             } else {
                 // put in database
-                let now = time::OffsetDateTime::now_utc().format(&Rfc3339)?;
-                let v = artist
-                    .into_iter()
-                    .map(|n| n.to_string())
-                    .collect::<Vec<String>>()
-                    .join(",");
+
+                let artist = match sqlx::query!(
+                    r#"
+                    SELECT id FROM artist
+                    WHERE name = $1
+                    "#,
+                    metadata.album_artist
+                )
+                .fetch_one(&mut pool.acquire().await?)
+                .await
+                {
+                    Ok(e) => e.id,
+                    Err(e) => {
+                        return Err(anyhow::format_err!(e));
+                    }
+                };
+
+                //let v = artist
+                //    .into_iter()
+                //    .map(|n| n.to_string())
+                //    .collect::<Vec<String>>()
+                //    .join(",");
                 let p = metadata.path.to_str().unwrap();
                 let n = metadata.number as i64;
                 let d = metadata.duration as i64;
                 let a = album as i64;
                 let _ = match sqlx::query!(
                     r#"
-                    INSERT INTO `song` (number, name, path, album, artist, artists, liked, duration, plays, lossless, genre, created_at)
-                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12);
-                    select id
-                    from `song`
-                    where name = $2;
+                    INSERT INTO song (number, name, path, album, artist, liked, duration, plays, lossless, genre, created_at)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+                    RETURNING id;
                     "#,
-                    n,
+                    n as i32,
                     metadata.name,
                     p,
-                    a,
-                    metadata.album_artist,
-                    v,
+                    a as i32,
+                    artist,
                     false,
-                    d,
+                    d as i32,
                     0 as i32,
                     metadata.lossless,
-                    "",
-                    now,
-                    metadata.name
+                    1,
+                    time::OffsetDateTime::now_utc(),
                 )
                 .fetch_all(&mut pool.acquire().await?)
                 .await

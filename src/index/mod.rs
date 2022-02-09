@@ -8,13 +8,13 @@ use futures::{
     SinkExt, StreamExt,
 };
 
-use sqlx::Sqlite;
+use sqlx::postgres::Postgres;
 use notify::{Event, RecommendedWatcher, RecursiveMode, Watcher};
 use notify::event::EventKind;
 use std::{path::Path, thread, time};
 use jwalk::{WalkDir};
 
-pub async fn start<P: AsRef<Path>>(path: P, pathstr:&str, pool:sqlx::Pool<Sqlite>) {
+pub async fn start<P: AsRef<Path>>(path: P, pathstr:&str, pool:sqlx::Pool<Postgres>) {
     if Path::new(&pathstr).is_file(){
         return println!("critical error !!!!!\nthe path {} is not a folder.",&pathstr)
     }
@@ -26,7 +26,7 @@ pub async fn start<P: AsRef<Path>>(path: P, pathstr:&str, pool:sqlx::Pool<Sqlite
     }
 }
 
-pub async fn scan<P: AsRef<Path>>(path: P, pool:sqlx::Pool<Sqlite>) {
+pub async fn scan<P: AsRef<Path>>(path: P, pool:sqlx::Pool<Postgres>) {
     // wait for other stuff to finish logging
     // will remove this sooner or later
     thread::sleep(time::Duration::from_millis(250));
@@ -52,7 +52,7 @@ fn async_watcher() -> notify::Result<(RecommendedWatcher, Receiver<notify::Resul
     Ok((watcher, rx))
 }
 
-pub async fn watch<P: AsRef<Path>>(path: P, pool:sqlx::Pool<Sqlite>) -> notify::Result<()> {
+pub async fn watch<P: AsRef<Path>>(path: P, pool:sqlx::Pool<Postgres>) -> notify::Result<()> {
     let (mut watcher, mut rx) = async_watcher()?;
 
     // Add a path to be watched. All files and directories at that path and
@@ -69,7 +69,7 @@ pub async fn watch<P: AsRef<Path>>(path: P, pool:sqlx::Pool<Sqlite>) -> notify::
     Ok(())
 }
 
-async fn parse_event(event: notify::event::Event,pool:sqlx::Pool<Sqlite>) {
+async fn parse_event(event: notify::event::Event,pool:sqlx::Pool<Postgres>) {
     match event.kind {
                                 // we sleep here until windows stops messing around with our file smh!
         EventKind::Create(_) => {thread::sleep(time::Duration::from_millis(75));

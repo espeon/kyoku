@@ -1,5 +1,5 @@
 use axum::{response::Html, routing::get, AddExtensionLayer, Router};
-use sqlx::{Pool, Sqlite};
+use sqlx::{Pool, postgres::Postgres};
 use std::net::SocketAddr;
 
 mod api;
@@ -9,7 +9,7 @@ mod index;
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     dotenv::dotenv()?;
-    let path = std::env!("MOUNT");
+    let path = std::env::var("MOUNT").unwrap();
 
     let pool = db::get_pool().await?;
     let p_cloned = pool.clone();
@@ -27,11 +27,12 @@ async fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-async fn serve(p: Pool<Sqlite>) -> anyhow::Result<()> {
+async fn serve(p: Pool<Postgres>) -> anyhow::Result<()> {
     // build our application with a route
     let app = Router::new()
         .route("/", get(handler))
         .route("/serve/a-:id", get(api::serve::serve_audio))
+        .route("/index-q0b3.json", get(api::index::index_songs))
         .layer(AddExtensionLayer::new(p));
 
     // run it
@@ -45,5 +46,5 @@ async fn serve(p: Pool<Sqlite>) -> anyhow::Result<()> {
 }
 
 async fn handler() -> Html<&'static str> {
-    Html("<h1>Hello, World!</h1>")
+    Html("<code>sh.kanbaru.kyoku</code>")
 }

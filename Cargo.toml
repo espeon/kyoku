@@ -19,7 +19,7 @@ crossbeam-channel = "0.4.0"
 notify = "5.0.0-pre.13"
 
 # time stuff
-time = { version = "0.3", features = ["formatting"] }
+time = { version = "0.2" }
 
 # parsing metadata stuff
 metaflac = "0.2"
@@ -28,7 +28,7 @@ metaflac = "0.2"
 anyhow = "1.0"
 
 # database things
-sqlx = { version = "0.5.10", default-features = false, features = [ "runtime-tokio-native-tls", "macros", "postgres", "sqlite", "time", "json" ] }
+sqlx = { version = "0.5.10", default-features = false, features = [ "runtime-tokio-native-tls", "macros", "postgres", "sqlite", "time", "json", "offline" ] }
 
 # json/serialisation/parsing things
 serde = { version = "1.0", features = ["derive"] }

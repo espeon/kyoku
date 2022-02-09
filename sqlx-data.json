@@ -1,0 +1,159 @@
+{
+  "db": "SQLite",
+  "08868b6e2094d5f0a95aba03467be041d86cbb7e08d5e85d5eeea1e256cf2c28": {
+    "query": "\n        select id\n        from `album`\n        where name = $1;\n        ",
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int64"
+        }
+      ],
+      "parameters": {
+        "Right": 1
+      },
+      "nullable": [
+        false
+      ]
+    }
+  },
+  "2bee7917b7b531d468a2685958c677872e314a1d591e87de3d84ef6578b7256c": {
+    "query": "\n        select id\n        from `song`\n        where name = $1;\n        ",
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int64"
+        }
+      ],
+      "parameters": {
+        "Right": 1
+      },
+      "nullable": [
+        false
+      ]
+    }
+  },
+  "3546dbf1d29bb1a8c4727e80541ba33b7f26fd436cc2d8895747203ee729bf5b": {
+    "query": "\n                INSERT INTO `artist` (name, bio, picture, created_at, similar, tags)\n                VALUES($1, $2, $3, $4, $5, $6);\n                select id\n                from `artist`\n                where name = $1;\n                ",
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int64"
+        }
+      ],
+      "parameters": {
+        "Right": 7
+      },
+      "nullable": [
+        false
+      ]
+    }
+  },
+  "5daa247f0af9a988b7836214e0a928e317deb550d9d7eae14997d6f5460e9112": {
+    "query": "\n        SELECT path from song\n        WHERE id = $1\n    ",
+    "describe": {
+      "columns": [
+        {
+          "name": "path",
+          "ordinal": 0,
+          "type_info": "Text"
+        }
+      ],
+      "parameters": {
+        "Right": 1
+      },
+      "nullable": [
+        false
+      ]
+    }
+  },
+  "830b961d9a0e3d528e0898d9a068e3b59dc2afe1b1b11e9ee667cffb1815d282": {
+    "query": "\n        select id\n        from `artist`\n        where name = $1;\n        ",
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int64"
+        }
+      ],
+      "parameters": {
+        "Right": 1
+      },
+      "nullable": [
+        false
+      ]
+    }
+  },
+  "abcf7972532d697b7390186eed47fe8105704669c88af623e0844a628f914ff3": {
+    "query": "\n            INSERT INTO `album` (name, artist, picture, year, created_at)\n            VALUES ($1, $2, $3, $4, $5);\n            select id\n            from `album`\n            where name = $6;\n            ",
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int64"
+        }
+      ],
+      "parameters": {
+        "Right": 6
+      },
+      "nullable": [
+        false
+      ]
+    }
+  },
+  "dd153d252b635feb54b42a4be0431d379a92618c48a784104b615889348a68de": {
+    "query": "\n        SELECT\n        song.id,\n        song.name,\n        song.artist\n      FROM\n        song\n        LEFT JOIN album ON song.album = album.id\n    ",
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int64"
+        },
+        {
+          "name": "name",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "artist",
+          "ordinal": 2,
+          "type_info": "Text"
+        }
+      ],
+      "parameters": {
+        "Right": 0
+      },
+      "nullable": [
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "f56f40b7a5b9bd00e4e25958d8b08d330c5781d4d6b00338aa07cd0dc8c5f626": {
+    "query": "\n                    INSERT INTO `song` (number, name, path, album, artist, artists, liked, duration, plays, lossless, genre, created_at)\n                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12);\n                    select id\n                    from `song`\n                    where name = $2;\n                    ",
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int64"
+        }
+      ],
+      "parameters": {
+        "Right": 13
+      },
+      "nullable": [
+        false
+      ]
+    }
+  }
+}

@@ -1,4 +1,5 @@
 pub mod serve;
+pub mod index;
 
 use serde::{Deserialize, Serialize};
 

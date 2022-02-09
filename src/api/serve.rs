@@ -3,14 +3,14 @@ use axum::{
     extract::{Extension, Path},
     http::{Request, Response, StatusCode},
 };
-use sqlx::SqlitePool;
+use sqlx::PgPool;
 use tower_http::services::fs::ServeFile;
 
 use tower::util::ServiceExt;
 
 pub async fn serve_audio(
     Path(id): Path<String>,
-    Extension(pool): Extension<SqlitePool>,
+    Extension(pool): Extension<PgPool>,
 ) -> Result<Response<BoxBody>, (StatusCode, String)> {
     let res = Request::builder().uri("/").body(Body::empty()).unwrap();
 

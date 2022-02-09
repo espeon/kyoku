@@ -1,8 +1,8 @@
-use sqlx::sqlite::{SqlitePool, SqlitePoolOptions};
+use sqlx::postgres::{PgPool, PgPoolOptions};
 use std::env;
 
-pub async fn get_pool() -> anyhow::Result<SqlitePool, anyhow::Error> {
-    let pool = SqlitePoolOptions::new()
+pub async fn get_pool() -> anyhow::Result<PgPool, anyhow::Error> {
+    let pool = PgPoolOptions::new()
         .max_connections(50)
         .min_connections(1)
         .max_lifetime(std::time::Duration::from_secs(10))
