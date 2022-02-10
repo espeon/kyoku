@@ -29,7 +29,7 @@ pub async fn serve_audio(
         Ok(f) => match ServeFile::new(f.path).oneshot(res).await {
             Ok(res) => Ok(res.map(boxed)),
             Err(err) => Err((
-                StatusCode::INTERNAL_SERVER_ERROR,
+                StatusCode::NOT_FOUND,
                 format!("Something went wrong: {}", err),
             )),
         },

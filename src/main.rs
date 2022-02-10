@@ -8,7 +8,8 @@ mod index;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    dotenv::dotenv()?;
+    dotenv::dotenv().ok(); // ok does NOT return an error if there is no env file, which is what we want here
+
     let path = std::env::var("MOUNT").unwrap();
 
     let pool = db::get_pool().await?;
@@ -36,7 +37,7 @@ async fn serve(p: Pool<Postgres>) -> anyhow::Result<()> {
         .layer(AddExtensionLayer::new(p));
 
     // run it
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+    let addr = SocketAddr::from(([0, 0, 0, 0], 3000));
     println!("listening on {}", addr);
     axum::Server::bind(&addr)
         .serve(app.into_make_service())

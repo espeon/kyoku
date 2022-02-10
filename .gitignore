@@ -1,7 +1,8 @@
 /target
 /art
 /music
-.env
+/tmp
+*.env
 *.flac
 *.mp3
 *.db
