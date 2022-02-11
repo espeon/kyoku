@@ -1,27 +1,28 @@
 pub mod serve;
 pub mod index;
+pub mod song;
 
 use serde::{Deserialize, Serialize};
+use time::OffsetDateTime;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Track {
-    id: i64,
+    id: i32,
     name: String,
-    artist: String,
+    artist: i32,
     path: String,
-    plays: Option<i64>,
-    duration: f64,
-    liked: bool,
-    last_play: Option<String>, // was serde_json::Value
-    year: i64,
-    number: i64,
-    lossless: bool,
-    created_at: String,
-    updated_at: Option<String>,
-    artists: Vec<Artist>,
-    playlists: Vec<i64>, // was serde_json::Value
-    album: Album,
-    genre: Option<Genre>,
+    plays: Option<i32>,
+    duration: i32,
+    liked: Option<bool>,
+    last_play: Option<OffsetDateTime>, // was serde_json::Value
+    year: Option<i32>,
+    number: Option<i32>,
+    lossless: Option<bool>,
+    created_at: OffsetDateTime,
+    updated_at: Option<OffsetDateTime>,
+    album: i32,
+    album_name: String,
+    artist_name: String
 }
 
 #[derive(Debug, Serialize, Deserialize)]
