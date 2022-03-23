@@ -8,7 +8,7 @@ note: this is absolutely not done by any means. anything can and will change.
 |-|-|-|-|
 [ ]|`GET /system/info`|Get stats about the server|N/A|
 
-#### Tracks
+#### Track
 |Done|Path|Description|Queries/Notes
 |-|-|-|-|
 [ ]|`GET /track`|Get information about a track|`?skip=:int&limit:int` - used for paging|
@@ -16,7 +16,7 @@ note: this is absolutely not done by any means. anything can and will change.
 [ ]|`GET /track/:id/stream`|Stream a track|`?transcode=:bool` - transcode the song or not|
 [ ]|`GET /track/:id/like`|Get whether you liked the track|`?liked=:bool` - toggle song likage|
 
-#### Albums
+#### Album
 |Done|Path|Description|Queries/Notes
 |-|-|-|-|
 [ ]|`GET /album/`|Get all albums|`?skip=:int`/`?index=:int` - which index to start at (used for paging)|
@@ -28,9 +28,9 @@ note: this is absolutely not done by any means. anything can and will change.
 #### Artist
 |Done|Path|Description|Queries/Notes
 |-|-|-|-|
-[ ]|`GET /artists/`|Get all artists|`?skip=:int`/`?index=:int` - which index to start at (used for paging)|
+[ ]|`GET /artist/`|Get all artists|`?skip=:int`/`?index=:int` - which index to start at (used for paging)|
 ||||`?limit=:int` - the max artists the endpoint will return, defaults to 10
-[ ]|`GET /artists/:id`|Get information about an artist|N/A|
+[ ]|`GET /artist/:id`|Get information about an artist|N/A|
 
 #### Search
 |Done|Path|Description|Queries/Notes
