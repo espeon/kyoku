@@ -4,14 +4,6 @@ use sqlx::{PgPool};
 
 use crate::api::Track;
 
-#[derive(Serialize)]
-pub struct IndexSong{
-  id: i32,
-  artist_name: Option<String>,
-  song_name: String,
-  album_name: Option<String>,
-}
-
 pub async fn get_song(
     Path(id): Path<String>,
     Extension(pool): Extension<PgPool>,

@@ -34,6 +34,7 @@ async fn serve(p: Pool<Postgres>) -> anyhow::Result<()> {
         .route("/", get(handler))
         .route("/serve/a-:id", get(api::serve::serve_audio))
         .route("/track/:id", get(api::song::get_song))
+        .route("/album/:id", get(api::album::get_album))
         .route("/index-q0b3.json", get(api::index::index_songs))
         .layer(AddExtensionLayer::new(p));
 

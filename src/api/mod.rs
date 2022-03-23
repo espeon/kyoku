@@ -1,6 +1,7 @@
 pub mod serve;
 pub mod index;
 pub mod song;
+pub mod album;
 
 use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
@@ -27,13 +28,29 @@ pub struct Track {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Album {
-    id: i64,
+    id: i32,
     name: String,
-    picture: String,
-    year: i64,
-    created_at: String,
-    updated_at: Option<String>,
-    artist: Artist,
+    picture: Option<String>,
+    year: Option<i32>,
+    created_at: OffsetDateTime,
+    updated_at: Option<OffsetDateTime>,
+    artist: ArtistPartial,
+    tracks: Option<Vec<Track>>
+}
+#[derive(Debug, Serialize, Deserialize)]
+pub struct AlbumRaw {
+    id: i32,
+    name: String,
+    picture: Option<String>,
+    year: Option<i32>,
+    created_at: OffsetDateTime,
+    updated_at: Option<OffsetDateTime>,
+    artist_id: i32,
+    artist_name: String,
+    artist_picture: Option<String>,
+    artist_bio: Option<String>,
+    artist_created_at: OffsetDateTime,
+    artist_updated_at: Option<OffsetDateTime>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -46,6 +63,16 @@ pub struct Artist {
     bio: Option<String>,
     created_at: String,
     updated_at: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ArtistPartial {
+    id: i32,
+    name: String,
+    picture: Option<String>,
+    bio: Option<String>,
+    created_at: OffsetDateTime,
+    updated_at: Option<OffsetDateTime>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
