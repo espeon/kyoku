@@ -1,8 +1,6 @@
 ## <img src="https://cdn.statically.io/img/raw.githubusercontent.com/w=700/kanbaru/kyoku/main/kyoku.png" width="450px">
 rusty music server
 
-meant to be used with [waveline player](https://player.waveline.app) but currently not compatible.
-
 note: this is absolutely not done by any means. anything can and will change.
 ### API
 #### System
@@ -13,20 +11,19 @@ note: this is absolutely not done by any means. anything can and will change.
 #### Tracks
 |Done|Path|Description|Queries/Notes
 |-|-|-|-|
-[ ]|`GET /tracks`|Get information about a track|`?album=:int` - find songs where album id is the number|
-||||`?skip=:int&limit:int` - used for paging
-[ ]|`GET /tracks/:id`|Get information about a track|N/A|
-[ ]|`GET /tracks/:id/stream`|Stream a track|`?transcode=:bool` - transcode the song or not|
-[ ]|`GET /tracks/:id/like`|Get whether you liked the track|`?liked=:bool` - toggle song likage|
+[ ]|`GET /track`|Get information about a track|`?skip=:int&limit:int` - used for paging|
+[ ]|`GET /track/:id`|Get information about a track|N/A|
+[ ]|`GET /track/:id/stream`|Stream a track|`?transcode=:bool` - transcode the song or not|
+[ ]|`GET /track/:id/like`|Get whether you liked the track|`?liked=:bool` - toggle song likage|
 
 #### Albums
 |Done|Path|Description|Queries/Notes
 |-|-|-|-|
-[ ]|`GET /albums/`|Get all albums|`?skip=:int`/`?index=:int` - which index to start at (used for paging)|
+[ ]|`GET /album/`|Get all albums|`?skip=:int`/`?index=:int` - which index to start at (used for paging)|
 ||||`?limit=:int` - the max albums the endpoint will return, defaults to 10
 ||||`?artist=:string` - self-explanatory
-[ ]|`GET /albums/:id`|Get information about an album|N/A|
-[ ]|`GET /albums/:id/art`|Get an album's art|N/A|
+[x]|`GET /album/:id`|Get information about an album|N/A|
+[ ]|`GET /album/:id/art`|Get an album's art|N/A|
 
 #### Artist
 |Done|Path|Description|Queries/Notes
