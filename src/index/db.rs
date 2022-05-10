@@ -174,22 +174,19 @@ async fn song_foc(
                 //    .collect::<Vec<String>>()
                 //    .join(",");
                 let p = metadata.path.to_str().unwrap();
-                let n = metadata.number as i64;
-                let d = metadata.duration as i64;
-                let a = album as i64;
                 let _ = match sqlx::query!(
                     r#"
                     INSERT INTO song (number, name, path, album, artist, liked, duration, plays, lossless, genre, created_at)
                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
                     RETURNING id;
                     "#,
-                    n as i32,
+                    metadata.number as i32,
                     metadata.name,
                     p,
-                    a as i32,
+                    album as i32,
                     artist,
                     false,
-                    d as i32,
+                    metadata.duration as i32,
                     0 as i32,
                     metadata.lossless,
                     1,

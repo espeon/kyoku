@@ -1,5 +1,4 @@
 use axum::{extract::{Extension, Path}, http::StatusCode, Json};
-use serde::Serialize;
 use sqlx::{PgPool};
 
 use crate::api::Track;
