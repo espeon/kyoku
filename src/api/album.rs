@@ -47,7 +47,7 @@ pub async fn get_album(
         )
         .fetch_all(&pool)
         .await{
-            Ok(e) => return Ok(Json(Album{
+            Ok(e) => Ok(Json(Album{
                 id: album.id, 
                 name: album.name,
                 picture: album.picture,
@@ -64,7 +64,7 @@ pub async fn get_album(
                 },
                 tracks: Some(e)
             })),
-            Err(e) => return Err(internal_error(e)),
+            Err(e) => Err(internal_error(e)),
         }
 }
 

@@ -23,8 +23,8 @@ pub async fn get_song(
         )
         .fetch_all(&pool)
         .await{
-            Ok(e) => return Ok(Json(e)),
-            Err(e) => return Err(internal_error(e)),
+            Ok(e) => Ok(Json(e)),
+            Err(e) => Err(internal_error(e)),
         }
 }
 
