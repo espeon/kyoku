@@ -16,8 +16,8 @@ pub async fn get_artist_image(query: &str) -> anyhow::Result<String> {
         .await?
         .json()
         .await?;
-        let img = if res.artists.items.len() > 0 {
-            if res.artists.items[0].images.len() > 0 {
+        let img = if !res.artists.items.is_empty() {
+            if !res.artists.items[0].images.is_empty() {
                 res.artists.items[0].images[0].clone().url
             } else {
                 "https://http.cat/404.jpg".to_string()
@@ -33,7 +33,7 @@ async fn authorize_spotify() -> anyhow::Result<String> {
     let client = reqwest::Client::new();
     let form = [("grant_type", "client_credentials")];
     let resp: TokenResponse = client
-        .post(&format!("https://accounts.spotify.com/api/token"))
+        .post(&"https://accounts.spotify.com/api/token".to_string())
         .form(&form)
         .header(
             "Authorization",

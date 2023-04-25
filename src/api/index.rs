@@ -28,8 +28,31 @@ pub async fn index_songs(
     )
     .fetch_all(&pool)
     .await{
-        Ok(e) => return Ok(Json(e)),
-        Err(e) => return Err(internal_error(e)),
+        Ok(e) => Ok(Json(e)),
+        Err(e) => Err(internal_error(e)),
+    }
+}
+
+pub async fn search_songs(
+    Extension(pool): Extension<PgPool>,
+) -> Result<axum::Json<Vec<IndexSong>>, (StatusCode, String)> {
+    match  sqlx::query_as!(IndexSong,
+        r#"
+    SELECT
+    song.id,
+    song.name as song_name,
+    artist.name as artist_name,
+    album.name as album_name
+    FROM
+    song
+    LEFT JOIN album ON song.album = album.id
+    LEFT JOIN artist ON song.artist = artist.id
+"#,
+    )
+    .fetch_all(&pool)
+    .await{
+        Ok(e) => Ok(Json(e)),
+        Err(e) => Err(internal_error(e)),
     }
 }
 

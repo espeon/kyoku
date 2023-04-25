@@ -19,7 +19,7 @@ async fn artist_foc(metadata: AudioMetadata, pool: sqlx::Pool<Postgres>) -> anyh
     // temporary artist storage (to return)
     let mut artivec: Vec<i32> = vec![];
     for arti in metadata.artists {
-        let _artist = match sqlx::query!(
+        match sqlx::query!(
             r#"
         select id
         from artist
@@ -31,8 +31,8 @@ async fn artist_foc(metadata: AudioMetadata, pool: sqlx::Pool<Postgres>) -> anyh
         .await
         {
             Ok(e) => {
-                if e.len() > 0 {
-                    artivec.push(e[0].id as i32)
+                if !e.is_empty() {
+                    artivec.push(e[0].id)
                 } else {
                     // format and coerce
 
@@ -56,7 +56,7 @@ async fn artist_foc(metadata: AudioMetadata, pool: sqlx::Pool<Postgres>) -> anyh
                     .fetch_all(&mut pool.acquire().await?)
                     .await
                     {
-                        Ok(e) => artivec.push(e[0].id as i32),
+                        Ok(e) => artivec.push(e[0].id),
                         Err(e) => return Err(anyhow::format_err!(e)),
                     };
                 }
@@ -73,7 +73,7 @@ async fn album_foc(
     pool: sqlx::Pool<Postgres>,
 ) -> anyhow::Result<i32> {
     // check if album already exists
-    let _ = match sqlx::query!(
+    match sqlx::query!(
         r#"
         select id
         from album
@@ -86,8 +86,8 @@ async fn album_foc(
     {
         Ok(e) => {
             // if no results, return
-            if e.len() > 0 {
-                return Ok(e[0].id as i32);
+            if !e.is_empty() {
+                Ok(e[0].id)
             } else {
                 // else we insert the allbum
                 // save image as <md5> OR a 404 image
@@ -100,7 +100,7 @@ async fn album_foc(
                 };
 
                 // insert into database
-                let _ = match sqlx::query!(
+                match sqlx::query!(
                     r#"
             INSERT INTO album (name, artist, picture, year, created_at)
             VALUES ($1, $2, $3, $4, $5)
@@ -115,17 +115,17 @@ async fn album_foc(
                 .fetch_all(&mut pool.acquire().await?)
                 .await
                 {
-                    Ok(e) => return Ok(e[0].id as i32),
+                    Ok(e) => Ok(e[0].id),
                     Err(e) => {
-                        return Err(anyhow::format_err!(e));
+                        Err(anyhow::format_err!(e))
                     }
-                };
+                }
             }
         }
         Err(e) => {
-            return Err(anyhow::format_err!(e));
+            Err(anyhow::format_err!(e))
         }
-    };
+    }
 }
 
 async fn song_foc(
@@ -135,7 +135,7 @@ async fn song_foc(
     pool: sqlx::Pool<Postgres>,
 ) -> anyhow::Result<i32> {
     // check if song exists
-    let _ = match sqlx::query!(
+    match sqlx::query!(
         r#"
         select id
         from song
@@ -147,8 +147,8 @@ async fn song_foc(
     .await
     {
         Ok(e) => {
-            if e.len() > 0 {
-                return Ok(e[0].id as i32);
+            if !e.is_empty() {
+                Ok(e[0].id)
             } else {
                 // put in database
 
@@ -174,7 +174,7 @@ async fn song_foc(
                 //    .collect::<Vec<String>>()
                 //    .join(",");
                 let p = metadata.path.to_str().unwrap();
-                let _ = match sqlx::query!(
+                match sqlx::query!(
                     r#"
                     INSERT INTO song (number, name, path, album, artist, liked, duration, plays, lossless, genre, created_at)
                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
@@ -195,17 +195,17 @@ async fn song_foc(
                 .fetch_all(&mut pool.acquire().await?)
                 .await
                 {
-                    Ok(e) => return Ok(e[0].id as i32),
+                    Ok(e) => Ok(e[0].id),
                     Err(e) => {
-                        return Err(anyhow::format_err!(e));
+                        Err(anyhow::format_err!(e))
                     }
-                };
+                }
             }
         }
         Err(e) => {
-            return Err(anyhow::format_err!(e));
+            Err(anyhow::format_err!(e))
         }
-    };
+    }
 }
 
 async fn save_image_md5(bytes: Vec<u8>) -> anyhow::Result<String> {

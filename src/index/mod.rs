@@ -76,9 +76,9 @@ async fn parse_event(event: notify::event::Event,pool:sqlx::Pool<Postgres>) {
                                     metadata::scan_file(&event.paths[0], pool).await
                                 },
         EventKind::Remove(_) => println!("removed {}", event.paths[0].to_str().unwrap()),
-        EventKind::Modify(_) =>return,
-        EventKind::Access(_) =>return,
-        EventKind::Any => return,
-        EventKind::Other => return,
+        EventKind::Modify(_) =>(),
+        EventKind::Access(_) =>(),
+        EventKind::Any => (),
+        EventKind::Other => (),
     }
 }

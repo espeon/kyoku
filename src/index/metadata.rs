@@ -65,8 +65,8 @@ pub async fn scan_flac(path: &std::path::PathBuf, pool: sqlx::Pool<sqlx::Postgre
     // calculate the number of secs
     let mut streaminfo = tag.get_blocks(metaflac::BlockType::StreamInfo);
     let duration = match streaminfo.next() {
-        Some(&metaflac::Block::StreamInfo(ref s)) => {
-            Some((s.total_samples as u32 / s.sample_rate) as u32)
+        Some(metaflac::Block::StreamInfo(s)) => {
+            Some(s.total_samples as u32 / s.sample_rate)
         }
         _ => None,
     }
@@ -74,28 +74,23 @@ pub async fn scan_flac(path: &std::path::PathBuf, pool: sqlx::Pool<sqlx::Postgre
     let year = vorbis.get("DATE").and_then(|d| d[0].parse::<i32>().ok());
 
     let picture = tag
-        .pictures()
-        .filter(|&pic| matches!(pic.picture_type, metaflac::block::PictureType::CoverFront))
-        .next()
-        .and_then(|pic| {
-            Some(Picture {
+        .pictures().find(|&pic| matches!(pic.picture_type, metaflac::block::PictureType::CoverFront)).map(|pic| Picture {
                 bytes: pic.data.to_owned(),
-            })
-        });
+            });
 
     let metadata = AudioMetadata {
         name: vorbis.title().map(|v| v[0].clone()).unwrap(),
         number: vorbis.track().unwrap(),
-        duration: duration,
+        duration,
         album: vorbis.album().map(|v| v[0].clone()).unwrap(),
         album_artist: match vorbis.album_artist().map(|v| v[0].clone()) {
             Some(e) => e,
             None => vorbis.artist().map(|v| v[0].clone()).unwrap(),
         },
         artists: vorbis.artist().unwrap().to_owned(),
-        picture: picture,
+        picture,
         path: path.to_owned(),
-        year: year,
+        year,
         lossless: true,
     };
 
@@ -122,10 +117,7 @@ pub async fn scan_flac(path: &std::path::PathBuf, pool: sqlx::Pool<sqlx::Postgre
     // or keep this and commit to db somewhere else?
     format!(
         "{}. {} by {} ({})",
-        match vorbis.track() {
-            Some(e) => e,
-            None => 1,
-        },
+        vorbis.track().unwrap_or(1),
         vorbis.title().map(|v| v[0].clone()).unwrap(),
         match vorbis.album_artist().map(|v| v[0].clone()) {
             Some(e) => e,
