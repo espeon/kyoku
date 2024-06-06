@@ -1,3 +1,6 @@
+> [!IMPORTANT]  
+> This repository has been incorporated into the [muse](https://github.com/espeon/muse) monorepo!
+
 ## <img src="https://cdn.statically.io/img/raw.githubusercontent.com/w=700/kanbaru/kyoku/main/kyoku.png" width="450px">
 rusty music server
 
